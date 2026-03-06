@@ -178,4 +178,43 @@ describe("NotionClient", () => {
       expect(body.filter).toEqual({ property: "object", value: "database" });
     });
   });
+
+  describe("getBlockChildren", () => {
+    test("fetches block children", async () => {
+      mockFetch.mockReset();
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: [
+            { id: "block-1", type: "paragraph", paragraph: { rich_text: [{ plain_text: "Hello" }] } },
+          ],
+          has_more: false,
+          next_cursor: null,
+        }),
+      });
+
+      const client = createClient();
+      const result = await client.getBlockChildren("page-123");
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://api.notion.com/v1/blocks/page-123/children",
+        {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer test-token",
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      expect(result).toEqual({
+        results: [
+          { id: "block-1", type: "paragraph", paragraph: { rich_text: [{ plain_text: "Hello" }] } },
+        ],
+        has_more: false,
+        next_cursor: null,
+      });
+    });
+  });
 });

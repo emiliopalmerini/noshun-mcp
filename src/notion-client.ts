@@ -79,4 +79,32 @@ export class NotionClient {
       description: db.description.map((d: any) => d.plain_text).join(""),
     }));
   }
+
+  async getPage(pageId: string) {
+    const res = await this.fetchFn(`${NOTION_API_BASE}/pages/${pageId}`, {
+      method: "GET",
+      headers: this.headers,
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json();
+      throw new Error(`Notion API error ${res.status}: ${(errBody as any).message}`);
+    }
+
+    return res.json() as any;
+  }
+
+  async getBlockChildren(blockId: string) {
+    const res = await this.fetchFn(`${NOTION_API_BASE}/blocks/${blockId}/children`, {
+      method: "GET",
+      headers: this.headers,
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json();
+      throw new Error(`Notion API error ${res.status}: ${(errBody as any).message}`);
+    }
+
+    return res.json() as any;
+  }
 }

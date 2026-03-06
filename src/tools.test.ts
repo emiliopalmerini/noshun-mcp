@@ -1,5 +1,5 @@
 import { describe, test, expect, mock, beforeEach } from "bun:test";
-import { handleGetDatabaseSchema, handleQueryDatabase, handleListDatabases } from "./tools";
+import { handleGetDatabaseSchema, handleQueryDatabase, handleListDatabases, handleGetPage } from "./tools";
 
 const mockFetch = mock();
 
@@ -165,5 +165,48 @@ describe("handleListDatabases", () => {
 
     const body = JSON.parse(mockFetch.mock.calls[0]![1].body);
     expect(body.query).toBe("Tasks");
+  });
+});
+
+describe("handleGetPage", () => {
+  test("returns page properties and formatted content", async () => {
+    mockFetch.mockReset();
+    // First call: get page metadata
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: "page-1",
+        url: "https://notion.so/page-1",
+        properties: {
+          Name: { id: "title", type: "title", title: [{ plain_text: "My Page" }] },
+          Status: { id: "abc", type: "status", status: { name: "Active", color: "green" } },
+        },
+      }),
+    });
+    // Second call: get block children
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        results: [
+          { type: "heading_1", heading_1: { rich_text: [{ plain_text: "Overview" }] } },
+          { type: "paragraph", paragraph: { rich_text: [{ plain_text: "Some content here." }] } },
+        ],
+        has_more: false,
+        next_cursor: null,
+      }),
+    });
+
+    const result = await handleGetPage(
+      { page_id: "page-1" },
+      "test-token",
+      mockFetch as any,
+    );
+
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.id).toBe("page-1");
+    expect(parsed.url).toBe("https://notion.so/page-1");
+    expect(parsed.properties.Name).toBe("My Page");
+    expect(parsed.properties.Status).toBe("Active");
+    expect(parsed.content).toBe("# Overview\nSome content here.");
   });
 });

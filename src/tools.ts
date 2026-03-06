@@ -4,7 +4,8 @@ import { NotionClient } from "./notion-client";
 import { buildQueryRequest } from "./query-builder";
 import type { SimpleFilter } from "./filter-builder";
 import type { SimpleSort } from "./sort-builder";
-import { formatQueryResponse } from "./response-formatter";
+import { formatQueryResponse, formatPageProperties } from "./response-formatter";
+import { formatBlocks } from "./block-formatter";
 
 type FetchFn = typeof globalThis.fetch;
 
@@ -49,6 +50,27 @@ export async function handleQueryDatabase(
   });
   const raw = await client.queryDatabase(args.database_id, body);
   const result = formatQueryResponse(raw);
+  return {
+    content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+  };
+}
+
+export async function handleGetPage(
+  args: { page_id: string },
+  token: string,
+  fetchFn: FetchFn = globalThis.fetch,
+) {
+  const client = new NotionClient(token, fetchFn);
+  const [page, blocks] = await Promise.all([
+    client.getPage(args.page_id),
+    client.getBlockChildren(args.page_id),
+  ]);
+  const result = {
+    id: page.id,
+    url: page.url,
+    properties: formatPageProperties(page.properties),
+    content: formatBlocks(blocks.results),
+  };
   return {
     content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
   };
@@ -113,5 +135,12 @@ export function registerTools(server: McpServer, token: string, fetchFn?: FetchF
       start_cursor: z.string().optional().describe("Cursor for pagination from a previous query."),
     },
     async (args) => handleQueryDatabase(args as QueryArgs, token, fetchFn),
+  );
+
+  server.tool(
+    "get-page",
+    "Get a Notion page's properties and body content. Returns flattened property values and the page content as markdown.",
+    { page_id: z.string().describe("The Notion page ID (UUID)") },
+    async (args) => handleGetPage(args, token, fetchFn),
   );
 }

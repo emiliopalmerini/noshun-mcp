@@ -19,6 +19,14 @@ function formatPage(page: any) {
   return formatted;
 }
 
+export function formatPageProperties(properties: Record<string, any>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [name, prop] of Object.entries(properties)) {
+    result[name] = extractValue(prop);
+  }
+  return result;
+}
+
 function extractValue(prop: { type: string; [key: string]: any }): unknown {
   const val = prop[prop.type];
 
