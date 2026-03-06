@@ -201,4 +201,72 @@ describe("buildFilter", () => {
       });
     });
   });
+
+  describe("select property", () => {
+    const schema = { Category: { type: "select" } };
+
+    test("equals", () => {
+      const result = buildFilter(schema, [
+        { property: "Category", equals: "Work" },
+      ]);
+      expect(result).toEqual({
+        property: "Category",
+        select: { equals: "Work" },
+      });
+    });
+
+    test("does_not_equal", () => {
+      const result = buildFilter(schema, [
+        { property: "Category", does_not_equal: "Personal" },
+      ]);
+      expect(result).toEqual({
+        property: "Category",
+        select: { does_not_equal: "Personal" },
+      });
+    });
+
+    test("is_empty", () => {
+      const result = buildFilter(schema, [
+        { property: "Category", is_empty: true },
+      ]);
+      expect(result).toEqual({
+        property: "Category",
+        select: { is_empty: true },
+      });
+    });
+  });
+
+  describe("multi_select property", () => {
+    const schema = { Tags: { type: "multi_select" } };
+
+    test("contains", () => {
+      const result = buildFilter(schema, [
+        { property: "Tags", contains: "urgent" },
+      ]);
+      expect(result).toEqual({
+        property: "Tags",
+        multi_select: { contains: "urgent" },
+      });
+    });
+
+    test("does_not_contain", () => {
+      const result = buildFilter(schema, [
+        { property: "Tags", does_not_contain: "archived" },
+      ]);
+      expect(result).toEqual({
+        property: "Tags",
+        multi_select: { does_not_contain: "archived" },
+      });
+    });
+
+    test("is_not_empty", () => {
+      const result = buildFilter(schema, [
+        { property: "Tags", is_not_empty: true },
+      ]);
+      expect(result).toEqual({
+        property: "Tags",
+        multi_select: { is_not_empty: true },
+      });
+    });
+  });
 });
