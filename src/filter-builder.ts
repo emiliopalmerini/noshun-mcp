@@ -5,13 +5,15 @@ export interface SimpleFilter {
   [condition: string]: string | number | boolean;
 }
 
-const STATUS_CONDITIONS = new Set(["equals", "does_not_equal", "is_empty", "is_not_empty"]);
-const RICH_TEXT_CONDITIONS = new Set([
-  "equals", "does_not_equal",
-  "contains", "does_not_contain",
-  "starts_with", "ends_with",
-  "is_empty", "is_not_empty",
-]);
+const CONDITIONS_BY_TYPE: Record<string, string[]> = {
+  status: ["equals", "does_not_equal", "is_empty", "is_not_empty"],
+  rich_text: [
+    "equals", "does_not_equal",
+    "contains", "does_not_contain",
+    "starts_with", "ends_with",
+    "is_empty", "is_not_empty",
+  ],
+};
 
 export function buildFilter(schema: PropertySchema, filters: SimpleFilter[]) {
   if (filters.length === 1) {
@@ -33,19 +35,15 @@ function buildSingleFilter(schema: PropertySchema, filter: SimpleFilter) {
   }
 
   const [condition, value] = conditionEntries[0];
+  const { type } = propSchema;
 
-  switch (propSchema.type) {
-    case "status":
-      if (!STATUS_CONDITIONS.has(condition)) {
-        throw new Error(`Invalid condition "${condition}" for status property`);
-      }
-      return { property, status: { [condition]: value } };
-    case "rich_text":
-      if (!RICH_TEXT_CONDITIONS.has(condition)) {
-        throw new Error(`Invalid condition "${condition}" for rich_text property`);
-      }
-      return { property, rich_text: { [condition]: value } };
-    default:
-      throw new Error(`Unsupported property type: ${propSchema.type}`);
+  const validConditions = CONDITIONS_BY_TYPE[type];
+  if (!validConditions) {
+    throw new Error(`Unsupported property type: ${type}`);
   }
+  if (!validConditions.includes(condition)) {
+    throw new Error(`Invalid condition "${condition}" for ${type} property`);
+  }
+
+  return { property, [type]: { [condition]: value } };
 }
