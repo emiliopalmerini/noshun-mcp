@@ -6,6 +6,7 @@ export interface SimpleFilter {
 }
 
 const CONDITIONS_BY_TYPE: Record<string, string[]> = {
+  checkbox: ["equals", "does_not_equal"],
   status: ["equals", "does_not_equal", "is_empty", "is_not_empty"],
   number: [
     "equals", "does_not_equal",

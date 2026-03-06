@@ -167,4 +167,38 @@ describe("buildFilter", () => {
       });
     });
   });
+
+  describe("checkbox property", () => {
+    const schema = { Done: { type: "checkbox" } };
+
+    test("equals true", () => {
+      const result = buildFilter(schema, [
+        { property: "Done", equals: true },
+      ]);
+      expect(result).toEqual({
+        property: "Done",
+        checkbox: { equals: true },
+      });
+    });
+
+    test("equals false", () => {
+      const result = buildFilter(schema, [
+        { property: "Done", equals: false },
+      ]);
+      expect(result).toEqual({
+        property: "Done",
+        checkbox: { equals: false },
+      });
+    });
+
+    test("does_not_equal", () => {
+      const result = buildFilter(schema, [
+        { property: "Done", does_not_equal: true },
+      ]);
+      expect(result).toEqual({
+        property: "Done",
+        checkbox: { does_not_equal: true },
+      });
+    });
+  });
 });
