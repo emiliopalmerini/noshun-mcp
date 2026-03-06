@@ -269,4 +269,62 @@ describe("buildFilter", () => {
       });
     });
   });
+
+  describe("people property", () => {
+    const schema = { Assignee: { type: "people" } };
+
+    test("contains", () => {
+      const result = buildFilter(schema, [
+        { property: "Assignee", contains: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+      ]);
+      expect(result).toEqual({
+        property: "Assignee",
+        people: { contains: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+      });
+    });
+
+    test("does_not_contain", () => {
+      const result = buildFilter(schema, [
+        { property: "Assignee", does_not_contain: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+      ]);
+      expect(result).toEqual({
+        property: "Assignee",
+        people: { does_not_contain: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+      });
+    });
+
+    test("is_empty", () => {
+      const result = buildFilter(schema, [
+        { property: "Assignee", is_empty: true },
+      ]);
+      expect(result).toEqual({
+        property: "Assignee",
+        people: { is_empty: true },
+      });
+    });
+  });
+
+  describe("relation property", () => {
+    const schema = { Project: { type: "relation" } };
+
+    test("contains", () => {
+      const result = buildFilter(schema, [
+        { property: "Project", contains: "b2c3d4e5-f6a7-8901-bcde-f12345678901" },
+      ]);
+      expect(result).toEqual({
+        property: "Project",
+        relation: { contains: "b2c3d4e5-f6a7-8901-bcde-f12345678901" },
+      });
+    });
+
+    test("is_not_empty", () => {
+      const result = buildFilter(schema, [
+        { property: "Project", is_not_empty: true },
+      ]);
+      expect(result).toEqual({
+        property: "Project",
+        relation: { is_not_empty: true },
+      });
+    });
+  });
 });
