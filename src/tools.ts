@@ -4,6 +4,7 @@ import { NotionClient } from "./notion-client";
 import { buildQueryRequest } from "./query-builder";
 import type { SimpleFilter } from "./filter-builder";
 import type { SimpleSort } from "./sort-builder";
+import { formatQueryResponse } from "./response-formatter";
 
 type FetchFn = typeof globalThis.fetch;
 
@@ -46,7 +47,8 @@ export async function handleQueryDatabase(
     page_size: args.page_size,
     start_cursor: args.start_cursor,
   });
-  const result = await client.queryDatabase(args.database_id, body);
+  const raw = await client.queryDatabase(args.database_id, body);
+  const result = formatQueryResponse(raw);
   return {
     content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
   };

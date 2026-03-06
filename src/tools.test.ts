@@ -55,7 +55,7 @@ describe("handleQueryDatabase", () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        results: [{ id: "page-1", properties: {} }],
+        results: [{ id: "page-1", url: "https://notion.so/page-1", properties: {} }],
         has_more: false,
         next_cursor: null,
       }),
@@ -73,6 +73,7 @@ describe("handleQueryDatabase", () => {
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.results).toHaveLength(1);
     expect(parsed.results[0].id).toBe("page-1");
+    expect(parsed.results[0].url).toBe("https://notion.so/page-1");
     expect(parsed.has_more).toBe(false);
 
     // Verify the query call had the right filter
