@@ -6,6 +6,12 @@ export interface SimpleFilter {
 }
 
 const STATUS_CONDITIONS = new Set(["equals", "does_not_equal", "is_empty", "is_not_empty"]);
+const RICH_TEXT_CONDITIONS = new Set([
+  "equals", "does_not_equal",
+  "contains", "does_not_contain",
+  "starts_with", "ends_with",
+  "is_empty", "is_not_empty",
+]);
 
 export function buildFilter(schema: PropertySchema, filters: SimpleFilter[]) {
   if (filters.length === 1) {
@@ -34,6 +40,11 @@ function buildSingleFilter(schema: PropertySchema, filter: SimpleFilter) {
         throw new Error(`Invalid condition "${condition}" for status property`);
       }
       return { property, status: { [condition]: value } };
+    case "rich_text":
+      if (!RICH_TEXT_CONDITIONS.has(condition)) {
+        throw new Error(`Invalid condition "${condition}" for rich_text property`);
+      }
+      return { property, rich_text: { [condition]: value } };
     default:
       throw new Error(`Unsupported property type: ${propSchema.type}`);
   }

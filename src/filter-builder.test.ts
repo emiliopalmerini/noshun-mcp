@@ -25,4 +25,48 @@ describe("buildFilter", () => {
       });
     });
   });
+
+  describe("rich_text property", () => {
+    const schema = { Name: { type: "rich_text" } };
+
+    test("contains", () => {
+      const result = buildFilter(schema, [
+        { property: "Name", contains: "hello" },
+      ]);
+      expect(result).toEqual({
+        property: "Name",
+        rich_text: { contains: "hello" },
+      });
+    });
+
+    test("equals", () => {
+      const result = buildFilter(schema, [
+        { property: "Name", equals: "exact match" },
+      ]);
+      expect(result).toEqual({
+        property: "Name",
+        rich_text: { equals: "exact match" },
+      });
+    });
+
+    test("starts_with", () => {
+      const result = buildFilter(schema, [
+        { property: "Name", starts_with: "pre" },
+      ]);
+      expect(result).toEqual({
+        property: "Name",
+        rich_text: { starts_with: "pre" },
+      });
+    });
+
+    test("is_empty", () => {
+      const result = buildFilter(schema, [
+        { property: "Name", is_empty: true },
+      ]);
+      expect(result).toEqual({
+        property: "Name",
+        rich_text: { is_empty: true },
+      });
+    });
+  });
 });
