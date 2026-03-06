@@ -6,6 +6,7 @@ import type { SimpleFilter } from "./filter-builder";
 import type { SimpleSort } from "./sort-builder";
 import { formatQueryResponse, formatPageProperties } from "./response-formatter";
 import { formatBlocks } from "./block-formatter";
+import { SchemaCache } from "./schema-cache";
 
 type FetchFn = typeof globalThis.fetch;
 
@@ -38,9 +39,14 @@ export async function handleQueryDatabase(
   args: QueryArgs,
   token: string,
   fetchFn: FetchFn = globalThis.fetch,
+  cache?: SchemaCache,
 ) {
   const client = new NotionClient(token, fetchFn);
-  const schema = await client.getDatabaseSchema(args.database_id);
+  let schema = cache?.get(args.database_id);
+  if (!schema) {
+    schema = await client.getDatabaseSchema(args.database_id);
+    cache?.set(args.database_id, schema);
+  }
   const body = buildQueryRequest(schema, {
     filters: args.filters,
     filter_operator: args.filter_operator,
@@ -89,6 +95,7 @@ export async function handleListDatabases(
 }
 
 export function registerTools(server: McpServer, token: string, fetchFn?: FetchFn) {
+  const schemaCache = new SchemaCache();
   server.tool(
     "list-databases",
     "Search for Notion databases accessible to the integration. Returns database IDs, titles, and descriptions. Use this to find database IDs before using get-database-schema or query-database.",
@@ -134,7 +141,7 @@ export function registerTools(server: McpServer, token: string, fetchFn?: FetchF
       page_size: z.number().optional().describe("Number of results per page (max 100)."),
       start_cursor: z.string().optional().describe("Cursor for pagination from a previous query."),
     },
-    async (args) => handleQueryDatabase(args as QueryArgs, token, fetchFn),
+    async (args) => handleQueryDatabase(args as QueryArgs, token, fetchFn, schemaCache),
   );
 
   server.tool(

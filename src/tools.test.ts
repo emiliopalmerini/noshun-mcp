@@ -1,5 +1,6 @@
 import { describe, test, expect, mock, beforeEach } from "bun:test";
 import { handleGetDatabaseSchema, handleQueryDatabase, handleListDatabases, handleGetPage } from "./tools";
+import { SchemaCache } from "./schema-cache";
 
 const mockFetch = mock();
 
@@ -119,6 +120,46 @@ describe("handleQueryDatabase", () => {
     expect(body.sorts).toEqual([{ property: "Name", direction: "ascending" }]);
     expect(body.page_size).toBe(5);
     expect(body.start_cursor).toBe("cur-abc");
+  });
+
+  test("uses cached schema on second query to same database", async () => {
+    const cache = new SchemaCache();
+
+    // First query: schema fetch + query (2 fetch calls)
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        properties: { Status: { id: "abc", type: "status", status: {} } },
+      }),
+    });
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ results: [], has_more: false, next_cursor: null }),
+    });
+
+    await handleQueryDatabase(
+      { database_id: "db-123", filters: [{ property: "Status", equals: "Done" }] },
+      "test-token",
+      mockFetch as any,
+      cache,
+    );
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+
+    // Second query: only query call, no schema fetch (1 fetch call)
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ results: [], has_more: false, next_cursor: null }),
+    });
+
+    await handleQueryDatabase(
+      { database_id: "db-123", filters: [{ property: "Status", equals: "Done" }] },
+      "test-token",
+      mockFetch as any,
+      cache,
+    );
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 });
 
