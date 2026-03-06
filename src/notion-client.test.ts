@@ -110,4 +110,72 @@ describe("NotionClient", () => {
       expect(client.queryDatabase("db-123", {})).rejects.toThrow("400");
     });
   });
+
+  describe("searchDatabases", () => {
+    test("searches with query and returns simplified results", async () => {
+      mockFetch.mockReset();
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: [
+            {
+              id: "db-aaa",
+              title: [{ plain_text: "Tasks" }],
+              description: [{ plain_text: "All my tasks" }],
+            },
+            {
+              id: "db-bbb",
+              title: [{ plain_text: "Projects" }],
+              description: [],
+            },
+          ],
+          has_more: false,
+          next_cursor: null,
+        }),
+      });
+
+      const client = createClient();
+      const result = await client.searchDatabases("Tasks");
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://api.notion.com/v1/search",
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer test-token",
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            filter: { property: "object", value: "database" },
+            query: "Tasks",
+          }),
+        },
+      );
+
+      expect(result).toEqual([
+        { id: "db-aaa", title: "Tasks", description: "All my tasks" },
+        { id: "db-bbb", title: "Projects", description: "" },
+      ]);
+    });
+
+    test("searches without query lists all databases", async () => {
+      mockFetch.mockReset();
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: [],
+          has_more: false,
+          next_cursor: null,
+        }),
+      });
+
+      const client = createClient();
+      await client.searchDatabases();
+
+      const body = JSON.parse(mockFetch.mock.calls[0]![1].body);
+      expect(body.query).toBeUndefined();
+      expect(body.filter).toEqual({ property: "object", value: "database" });
+    });
+  });
 });

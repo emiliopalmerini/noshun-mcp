@@ -52,7 +52,28 @@ export async function handleQueryDatabase(
   };
 }
 
+export async function handleListDatabases(
+  args: { query?: string },
+  token: string,
+  fetchFn: FetchFn = globalThis.fetch,
+) {
+  const client = new NotionClient(token, fetchFn);
+  const databases = await client.searchDatabases(args.query);
+  return {
+    content: [{ type: "text" as const, text: JSON.stringify(databases, null, 2) }],
+  };
+}
+
 export function registerTools(server: McpServer, token: string, fetchFn?: FetchFn) {
+  server.tool(
+    "list-databases",
+    "Search for Notion databases accessible to the integration. Returns database IDs, titles, and descriptions. Use this to find database IDs before using get-database-schema or query-database.",
+    {
+      query: z.string().optional().describe("Optional search query to filter databases by title. Omit to list all."),
+    },
+    async (args) => handleListDatabases(args, token, fetchFn),
+  );
+
   server.tool(
     "get-database-schema",
     "Get the schema (property names and types) of a Notion database. Use this before query-database to know which properties and types are available for filtering.",

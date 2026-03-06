@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "noshun": {
+      "command": "bun",
+      "args": ["index.ts"],
+      "cwd": "/home/epalmerini/src/tools/notion-mcp"
+    }
+  }
+}

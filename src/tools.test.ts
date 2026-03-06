@@ -1,5 +1,5 @@
 import { describe, test, expect, mock, beforeEach } from "bun:test";
-import { handleGetDatabaseSchema, handleQueryDatabase } from "./tools";
+import { handleGetDatabaseSchema, handleQueryDatabase, handleListDatabases } from "./tools";
 
 const mockFetch = mock();
 
@@ -118,5 +118,51 @@ describe("handleQueryDatabase", () => {
     expect(body.sorts).toEqual([{ property: "Name", direction: "ascending" }]);
     expect(body.page_size).toBe(5);
     expect(body.start_cursor).toBe("cur-abc");
+  });
+});
+
+describe("handleListDatabases", () => {
+  test("returns list of databases with id and title", async () => {
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        results: [
+          { id: "db-aaa", title: [{ plain_text: "Tasks" }], description: [{ plain_text: "My tasks" }] },
+          { id: "db-bbb", title: [{ plain_text: "Projects" }], description: [] },
+        ],
+        has_more: false,
+        next_cursor: null,
+      }),
+    });
+
+    const result = await handleListDatabases(
+      {},
+      "test-token",
+      mockFetch as any,
+    );
+
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed).toEqual([
+      { id: "db-aaa", title: "Tasks", description: "My tasks" },
+      { id: "db-bbb", title: "Projects", description: "" },
+    ]);
+  });
+
+  test("passes query when provided", async () => {
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ results: [], has_more: false, next_cursor: null }),
+    });
+
+    await handleListDatabases(
+      { query: "Tasks" },
+      "test-token",
+      mockFetch as any,
+    );
+
+    const body = JSON.parse(mockFetch.mock.calls[0]![1].body);
+    expect(body.query).toBe("Tasks");
   });
 });

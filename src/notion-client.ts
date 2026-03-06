@@ -52,4 +52,31 @@ export class NotionClient {
 
     return res.json();
   }
+
+  async searchDatabases(query?: string) {
+    const body: Record<string, unknown> = {
+      filter: { property: "object", value: "database" },
+    };
+    if (query) {
+      body.query = query;
+    }
+
+    const res = await this.fetchFn(`${NOTION_API_BASE}/search`, {
+      method: "POST",
+      headers: this.headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json();
+      throw new Error(`Notion API error ${res.status}: ${(errBody as any).message}`);
+    }
+
+    const data = await res.json() as any;
+    return data.results.map((db: any) => ({
+      id: db.id,
+      title: db.title.map((t: any) => t.plain_text).join(""),
+      description: db.description.map((d: any) => d.plain_text).join(""),
+    }));
+  }
 }
