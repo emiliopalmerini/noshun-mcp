@@ -19,7 +19,21 @@ const CONDITIONS_BY_TYPE: Record<string, string[]> = {
     "starts_with", "ends_with",
     "is_empty", "is_not_empty",
   ],
+  date: [
+    "equals", "before", "after",
+    "on_or_before", "on_or_after",
+    "past_week", "past_month", "past_year",
+    "next_week", "next_month", "next_year",
+    "this_week",
+    "is_empty", "is_not_empty",
+  ],
 };
+
+const DATE_RELATIVE_CONDITIONS = new Set([
+  "past_week", "past_month", "past_year",
+  "next_week", "next_month", "next_year",
+  "this_week",
+]);
 
 export function buildFilter(schema: PropertySchema, filters: SimpleFilter[]) {
   if (filters.length === 1) {
@@ -51,5 +65,6 @@ function buildSingleFilter(schema: PropertySchema, filter: SimpleFilter) {
     throw new Error(`Invalid condition "${condition}" for ${type} property`);
   }
 
-  return { property, [type]: { [condition]: value } };
+  const conditionValue = DATE_RELATIVE_CONDITIONS.has(condition) ? {} : value;
+  return { property, [type]: { [condition]: conditionValue } };
 }

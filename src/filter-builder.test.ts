@@ -113,4 +113,58 @@ describe("buildFilter", () => {
       });
     });
   });
+
+  describe("date property", () => {
+    const schema = { "Due Date": { type: "date" } };
+
+    test("before", () => {
+      const result = buildFilter(schema, [
+        { property: "Due Date", before: "2026-03-10" },
+      ]);
+      expect(result).toEqual({
+        property: "Due Date",
+        date: { before: "2026-03-10" },
+      });
+    });
+
+    test("after", () => {
+      const result = buildFilter(schema, [
+        { property: "Due Date", after: "2026-01-01" },
+      ]);
+      expect(result).toEqual({
+        property: "Due Date",
+        date: { after: "2026-01-01" },
+      });
+    });
+
+    test("on_or_before", () => {
+      const result = buildFilter(schema, [
+        { property: "Due Date", on_or_before: "2026-03-06" },
+      ]);
+      expect(result).toEqual({
+        property: "Due Date",
+        date: { on_or_before: "2026-03-06" },
+      });
+    });
+
+    test("past_week (empty object value)", () => {
+      const result = buildFilter(schema, [
+        { property: "Due Date", past_week: true },
+      ]);
+      expect(result).toEqual({
+        property: "Due Date",
+        date: { past_week: {} },
+      });
+    });
+
+    test("next_month (empty object value)", () => {
+      const result = buildFilter(schema, [
+        { property: "Due Date", next_month: true },
+      ]);
+      expect(result).toEqual({
+        property: "Due Date",
+        date: { next_month: {} },
+      });
+    });
+  });
 });
