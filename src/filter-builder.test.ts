@@ -69,4 +69,48 @@ describe("buildFilter", () => {
       });
     });
   });
+
+  describe("number property", () => {
+    const schema = { Priority: { type: "number" } };
+
+    test("equals", () => {
+      const result = buildFilter(schema, [
+        { property: "Priority", equals: 5 },
+      ]);
+      expect(result).toEqual({
+        property: "Priority",
+        number: { equals: 5 },
+      });
+    });
+
+    test("greater_than", () => {
+      const result = buildFilter(schema, [
+        { property: "Priority", greater_than: 3 },
+      ]);
+      expect(result).toEqual({
+        property: "Priority",
+        number: { greater_than: 3 },
+      });
+    });
+
+    test("less_than_or_equal_to", () => {
+      const result = buildFilter(schema, [
+        { property: "Priority", less_than_or_equal_to: 10 },
+      ]);
+      expect(result).toEqual({
+        property: "Priority",
+        number: { less_than_or_equal_to: 10 },
+      });
+    });
+
+    test("is_empty", () => {
+      const result = buildFilter(schema, [
+        { property: "Priority", is_empty: true },
+      ]);
+      expect(result).toEqual({
+        property: "Priority",
+        number: { is_empty: true },
+      });
+    });
+  });
 });

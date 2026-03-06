@@ -7,6 +7,12 @@ export interface SimpleFilter {
 
 const CONDITIONS_BY_TYPE: Record<string, string[]> = {
   status: ["equals", "does_not_equal", "is_empty", "is_not_empty"],
+  number: [
+    "equals", "does_not_equal",
+    "greater_than", "greater_than_or_equal_to",
+    "less_than", "less_than_or_equal_to",
+    "is_empty", "is_not_empty",
+  ],
   rich_text: [
     "equals", "does_not_equal",
     "contains", "does_not_contain",
