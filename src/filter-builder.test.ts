@@ -327,4 +327,53 @@ describe("buildFilter", () => {
       });
     });
   });
+
+  describe("compound filters", () => {
+    const schema = {
+      Status: { type: "status" },
+      Priority: { type: "number" },
+      Done: { type: "checkbox" },
+    };
+
+    test("multiple filters default to AND", () => {
+      const result = buildFilter(schema, [
+        { property: "Status", equals: "In Progress" },
+        { property: "Priority", greater_than: 3 },
+      ]);
+      expect(result).toEqual({
+        and: [
+          { property: "Status", status: { equals: "In Progress" } },
+          { property: "Priority", number: { greater_than: 3 } },
+        ],
+      });
+    });
+
+    test("explicit or", () => {
+      const result = buildFilter(schema, [
+        { property: "Status", equals: "Done" },
+        { property: "Status", equals: "Cancelled" },
+      ], "or");
+      expect(result).toEqual({
+        or: [
+          { property: "Status", status: { equals: "Done" } },
+          { property: "Status", status: { equals: "Cancelled" } },
+        ],
+      });
+    });
+
+    test("three filters with and", () => {
+      const result = buildFilter(schema, [
+        { property: "Status", equals: "In Progress" },
+        { property: "Priority", greater_than: 3 },
+        { property: "Done", equals: false },
+      ]);
+      expect(result).toEqual({
+        and: [
+          { property: "Status", status: { equals: "In Progress" } },
+          { property: "Priority", number: { greater_than: 3 } },
+          { property: "Done", checkbox: { equals: false } },
+        ],
+      });
+    });
+  });
 });

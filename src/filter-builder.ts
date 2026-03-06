@@ -40,11 +40,11 @@ const DATE_RELATIVE_CONDITIONS = new Set([
   "this_week",
 ]);
 
-export function buildFilter(schema: PropertySchema, filters: SimpleFilter[]) {
+export function buildFilter(schema: PropertySchema, filters: SimpleFilter[], operator: "and" | "or" = "and") {
   if (filters.length === 1) {
     return buildSingleFilter(schema, filters[0]);
   }
-  throw new Error("Multiple filters not yet supported");
+  return { [operator]: filters.map((f) => buildSingleFilter(schema, f)) };
 }
 
 function buildSingleFilter(schema: PropertySchema, filter: SimpleFilter) {
